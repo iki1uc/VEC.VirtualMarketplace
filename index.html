@@ -2,41 +2,766 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>VEC.VirtualMarketplace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VEC.VirtualMarketplace · Börsenstation · FOUNDER</title>
+
 <style>
-    body { background:#111; color:#eee; font-family:Arial; padding:20px; }
-    button { padding:10px 20px; margin:5px; background:#333; color:#fff; border:1px solid #555; }
-    #log { margin-top:20px; padding:10px; background:#222; border:1px solid #444; }
+:root {
+    --bg: #0a0a0f;
+    --fg: #0f0;
+    --gold: #ffd700;
+    --door: #ff6b6b;
+    --doo: #ff44ff;
+    --vec: #6b6bff;
+    --genie: #ffd93d;
+    --api: #6cf;
+    --trade: #4f4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Consolas', monospace;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 6px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+header h1 {
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 2px;
+}
+header h1 .vec { color: var(--vec); }
+header h1 .market { color: var(--genie); }
+header h1 .founder { color: var(--door); }
+#info-bar { font-size: 9px; color: #666; display: flex; gap: 8px; align-items: center; }
+
+main {
+    display: grid;
+    grid-template-columns: 3fr 1.2fr;
+    gap: 6px;
+    height: 100%;
+    min-height: 0;
+}
+
+#canvas-wrap {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 10px;
+    padding: 6px;
+    position: relative;
+    overflow: hidden;
+}
+#canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    display: block;
+}
+#canvas-overlay {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    font-size: 7px;
+    color: #444;
+    pointer-events: none;
+    background: rgba(0,0,0,0.7);
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+#canvas-overlay .market { color: var(--gold); }
+
+#panel {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 10px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow-y: auto;
+    max-height: 100%;
+}
+#panel h3 { font-size: 9px; color: #666; border-bottom: 1px solid #1a1a2a; padding-bottom: 3px; }
+
+#modules {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+}
+.mod {
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.mod:hover {
+    border-color: var(--gold);
+    background: rgba(255,215,61,0.05);
+}
+.mod .sym { font-size: 14px; display: block; }
+.mod .label { color: #666; font-size: 5px; text-transform: uppercase; letter-spacing: 1px; }
+.mod .desc { color: #444; font-size: 4px; }
+.mod.active { border-color: var(--gold); background: rgba(255,215,61,0.08); }
+
+#log {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 7px;
+    color: #6a6a8a;
+    line-height: 1.3;
+    min-height: 30px;
+    max-height: 60px;
+    background: #06060a;
+    border-radius: 4px;
+    padding: 3px 5px;
+}
+#log .entry { padding: 1px 0; border-bottom: 1px solid #0a0a12; }
+#log .time { color: #444; }
+#log .msg.door { color: var(--door); }
+#log .msg.doo { color: var(--doo); }
+#log .msg.vec { color: var(--vec); }
+#log .msg.genie { color: var(--genie); }
+#log .msg.api { color: var(--api); }
+#log .msg.trade { color: var(--trade); }
+#log .msg.market { color: var(--gold); }
+
+#metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+.metric {
+    background: #0e0e1a;
+    border-radius: 3px;
+    padding: 2px 3px;
+    text-align: center;
+    border: 1px solid #1a1a2a;
+}
+.metric .label { color: #666; font-size: 5px; text-transform: uppercase; }
+.metric .value { font-size: 9px; font-weight: bold; }
+.metric.door .value { color: var(--door); }
+.metric.doo .value { color: var(--doo); }
+.metric.vec .value { color: var(--vec); }
+.metric.trade .value { color: var(--trade); }
+
+#controls {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+button {
+    background: #111;
+    color: var(--fg);
+    border: 1px solid #333;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 8px;
+    transition: all 0.2s;
+}
+button:hover { background: #1a1a2a; border-color: var(--gold); }
+button:active { transform: scale(0.95); }
+button.primary { border-color: var(--gold); color: var(--gold); }
+button.primary:hover { background: var(--gold); color: #000; }
+button.door { border-color: var(--door); color: var(--door); }
+button.door:hover { background: var(--door); color: #000; }
+button.doo { border-color: var(--doo); color: var(--doo); }
+button.doo:hover { background: var(--doo); color: #000; }
+button.vec { border-color: var(--vec); color: var(--vec); }
+button.vec:hover { background: var(--vec); color: #000; }
+button.genie { border-color: var(--genie); color: var(--genie); }
+button.genie:hover { background: var(--genie); color: #000; }
+button.api { border-color: var(--api); color: var(--api); }
+button.api:hover { background: var(--api); color: #000; }
+button.trade { border-color: var(--trade); color: var(--trade); }
+button.trade:hover { background: var(--trade); color: #000; }
+button.danger { border-color: #f44; color: #f44; }
+button.danger:hover { background: #f44; color: #000; }
+
+@media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+    #panel { max-height: 180px; }
+    #modules { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
 
-<h1>VEC.VirtualMarketplace</h1>
-<p>Interaktive Teststation für Marktlogik.</p>
+<header>
+    <h1>
+        <span class="vec">◈ VEC</span>
+        <span style="color:#666;">·</span>
+        <span class="market">📊 MARKET</span>
+        <span style="color:#666;">·</span>
+        <span class="founder">⚡ FOUNDER</span>
+    </h1>
+    <div id="info-bar">
+        <span id="clock">⏱️ --:--:--</span>
+        <span id="state-display" style="color:var(--gold);">● bereit</span>
+        <span id="cycle-display" style="color:#666;">BÖRSE 0</span>
+    </div>
+</header>
 
-<button onclick="control()">DOO/IT aktivieren</button>
-<button onclick="passage()">DOOR öffnen</button>
-<button onclick="trade()">Trade ausführen</button>
+<main>
+    <div id="canvas-wrap">
+        <canvas id="vecCanvas"></canvas>
+        <div id="canvas-overlay">
+            <span class="market">📊</span> VEC · VirtualMarketplace · DOOR/DOO/IT · GENIE · API
+        </div>
+    </div>
 
-<div id="log">System bereit.</div>
+    <div id="panel">
+        <h3>📊 VEC · VIRTUAL MARKETPLACE</h3>
+
+        <div id="modules">
+            <div class="mod active" data-mod="VEC">
+                <span class="sym">◈</span>
+                <span class="label">VEC</span>
+                <span class="desc">Market-Exchange</span>
+            </div>
+            <div class="mod" data-mod="DOOR">
+                <span class="sym">🚪</span>
+                <span class="label">DOOR</span>
+                <span class="desc">Durchgang</span>
+            </div>
+            <div class="mod" data-mod="GENIE">
+                <span class="sym">🧞</span>
+                <span class="label">GENIE</span>
+                <span class="desc">Bewertung</span>
+            </div>
+        </div>
+
+        <div id="metrics">
+            <div class="metric door"><div class="label">DOOR</div><div class="value" id="door-value">0</div></div>
+            <div class="metric doo"><div class="label">DOO/IT</div><div class="value" id="doo-value">0</div></div>
+            <div class="metric vec"><div class="label">VECTOR</div><div class="value" id="vec-value">0</div></div>
+            <div class="metric trade"><div class="label">TRADES</div><div class="value" id="trade-value">0</div></div>
+        </div>
+
+        <div id="log">
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg market">📊 VEC · VirtualMarketplace · Founder</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg door">🚪 DOOR · Durchgang · Passage</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg doo">🔑 DOO/IT · Kontrolle</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg genie">🧞 GENIE · Bewertung</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg vec">◈ VECTOR · Routing</span></div>
+        </div>
+
+        <div id="controls">
+            <button class="primary" id="btn-start">▶ START</button>
+            <button class="door" id="btn-door">🚪 DOOR</button>
+            <button class="doo" id="btn-doo">🔑 DOO/IT</button>
+            <button class="vec" id="btn-vec">◈ VECTOR</button>
+            <button class="genie" id="btn-genie">🧞 GENIE</button>
+            <button class="api" id="btn-api">🔌 API</button>
+            <button class="trade" id="btn-trade">📊 TRADE</button>
+            <button class="danger" id="btn-reset">⟲ RESET</button>
+            <button id="btn-auto">▶ AUTO</button>
+        </div>
+    </div>
+</main>
 
 <script>
-function log(msg) {
-    document.getElementById("log").innerHTML = msg;
+// ============================================================
+// VEC · VIRTUAL MARKETPLACE · FOUNDER
+// ============================================================
+
+// --- VEC SYSTEM ---
+var VEC = {
+    active: true,
+    vector: true,
+    genie: true,
+    control: false,
+    passage: false,
+    state: 'idle',
+    trades: [],
+    doorCount: 0,
+    dooCount: 0,
+    vecCount: 0,
+    genieCount: 0,
+    apiCount: 0,
+    tradeCount: 0
+};
+
+// --- FUNKTIONEN ---
+function DOO_control() {
+    VEC.control = true;
+    VEC.state = 'control-ready';
+    VEC.dooCount++;
+    document.getElementById('doo-value').textContent = VEC.dooCount;
+    log('🔑 DOO/IT Kontrolle aktiviert · ' + VEC.dooCount, 'doo');
+    return 'DOO/IT Kontrolle aktiviert.';
 }
 
-function control() {
-    log("DOO/IT aktiviert → Kontrolle bereit.");
+function DOOR_passage() {
+    if (!VEC.control) {
+        VEC.passage = true;
+        VEC.state = 'tmp-transition';
+        VEC.doorCount++;
+        document.getElementById('door-value').textContent = VEC.doorCount;
+        log('🚪 DOOR geöffnet (tmp) · ' + VEC.doorCount, 'door');
+        return 'DOOR geöffnet (tmp) → Übergang ohne Kontrolle.';
+    }
+    VEC.passage = true;
+    VEC.state = 'stable-transition';
+    VEC.doorCount++;
+    document.getElementById('door-value').textContent = VEC.doorCount;
+    log('🚪 DOOR stabil geöffnet · ' + VEC.doorCount, 'door');
+    return 'DOOR stabil geöffnet → Kontrolle aktiv.';
 }
 
-function passage() {
-    log("DOOR geöffnet → Übergang aktiv.");
+function VECTOR_route(input) {
+    if (!VEC.passage) return 'Kein Übergang aktiv.';
+    VEC.vecCount++;
+    document.getElementById('vec-value').textContent = VEC.vecCount;
+    var result = 'Routing über .VECTOR: ' + (input || 'Standard');
+    log('◈ VECTOR · ' + result + ' · ' + VEC.vecCount, 'vec');
+    return result;
 }
 
-function trade() {
-    log("Trade ausgeführt → Bewertung durch GENIE.");
+function GENIE_rate(value) {
+    if (!VEC.genie) return 'GENIE nicht aktiv.';
+    VEC.genieCount++;
+    var score = Math.round(Math.random() * 100);
+    var result = '🧞 GENIE Bewertung für "' + (value || 'Item') + '": ' + score;
+    log('🧞 GENIE · ' + result + ' · ' + VEC.genieCount, 'genie');
+    return result;
 }
+
+function API_connect() {
+    VEC.apiCount++;
+    VEC.state = 'api-connected';
+    log('🔌 API · Verbindung hergestellt · ' + VEC.apiCount, 'api');
+    return 'API verbunden · Durchlass aktiv.';
+}
+
+function VEC_trade(item) {
+    if (!VEC.passage) {
+        log('📊 Trade blockiert → kein Übergang.', 'trade');
+        return 'Trade blockiert → kein Übergang.';
+    }
+    var rating = GENIE_rate(item);
+    VEC.trades.push({ item: item || 'Item', rating: rating });
+    VEC.tradeCount++;
+    document.getElementById('trade-value').textContent = VEC.tradeCount;
+    var result = '📊 Trade ausgeführt: ' + (item || 'Item') + ' → ' + rating;
+    log('📊 ' + result + ' · ' + VEC.tradeCount, 'trade');
+    return result;
+}
+
+// ============================================================
+// CANVAS SETUP
+// ============================================================
+var canvas = document.getElementById('vecCanvas');
+var ctx = canvas.getContext('2d');
+var W, H, cx, cy, radius;
+
+function resizeCanvas() {
+    var wrap = document.getElementById('canvas-wrap');
+    var rect = wrap.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    W = canvas.width; H = canvas.height;
+    cx = W / 2; cy = H / 2;
+    radius = Math.min(W, H) * 0.38;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ============================================================
+// STATE
+// ============================================================
+var state = {
+    running: false,
+    autoMode: false,
+    cycle: 0,
+    t: 0,
+    activeMod: 'VEC',
+    items: ['BTC', 'ETH', 'XRP', 'SOL', 'DOGE', 'ADA', 'DOT', 'MATIC']
+};
+
+// ============================================================
+// LOG
+// ============================================================
+function log(msg, type) {
+    var logDiv = document.getElementById('log');
+    var entry = document.createElement('div');
+    entry.className = 'entry';
+    var time = new Date().toLocaleTimeString();
+    var cls = type === 'door' ? 'door' : type === 'doo' ? 'doo' :
+              type === 'vec' ? 'vec' : type === 'genie' ? 'genie' :
+              type === 'api' ? 'api' : type === 'trade' ? 'trade' :
+              type === 'market' ? 'market' : '';
+    entry.innerHTML = '<span class="time">[' + time + ']</span> <span class="msg ' + cls + '">' + msg + '</span>';
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+    while (logDiv.children.length > 50) logDiv.removeChild(logDiv.firstChild);
+}
+
+// ============================================================
+// KERN-FUNKTIONEN
+// ============================================================
+
+function activateMod(key) {
+    state.activeMod = key;
+    var els = document.querySelectorAll('.mod');
+    for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.getAttribute('data-mod') === key) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    }
+
+    switch(key) {
+        case 'VEC':
+            log('◈ VEC · Market-Exchange · ' + VEC.trades.length + ' Trades', 'vec');
+            break;
+        case 'DOOR':
+            DOOR_passage();
+            break;
+        case 'GENIE':
+            var item = state.items[state.cycle % state.items.length];
+            GENIE_rate(item);
+            break;
+    }
+}
+
+function marketStep() {
+    var item = state.items[state.cycle % state.items.length];
+    if (!VEC.passage) {
+        DOOR_passage();
+    }
+    if (VEC.passage) {
+        var route = VECTOR_route(item);
+        var genie = GENIE_rate(item);
+        var trade = VEC_trade(item);
+        log('📊 ' + item + ' · ' + route + ' · ' + genie + ' · ' + trade, 'market');
+    }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    var grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, W * 0.6);
+    grad.addColorStop(0, '#0a0a1a');
+    grad.addColorStop(1, '#000');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    drawMarketRing();
+    drawModules();
+    drawTrades();
+    drawCenter();
+
+    state.t += 0.008;
+    if (state.running) {
+        state.cycle++;
+        if (state.cycle % 15 === 0) {
+            var mods = ['VEC', 'DOOR', 'GENIE'];
+            var idx = Math.floor(Math.random() * mods.length);
+            activateMod(mods[idx]);
+        }
+        if (state.cycle % 30 === 0) marketStep();
+        document.getElementById('cycle-display').textContent = 'BÖRSE ' + state.cycle;
+    }
+
+    requestAnimationFrame(render);
+}
+render();
+
+// ============================================================
+// ZEICHEN-FUNKTIONEN
+// ============================================================
+
+function drawMarketRing() {
+    var r = radius * 0.7;
+
+    ctx.strokeStyle = 'rgba(255,215,61,0.04)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var colors = ['#ff6b6b', '#ff44ff', '#6b6bff', '#ffd93d', '#6cf', '#4f4'];
+    var labels = ['DOOR', 'DOO/IT', 'VECTOR', 'GENIE', 'API', 'TRADE'];
+    for (var i = 0; i < 6; i++) {
+        var angle = (i / 6) * Math.PI * 2 + state.t * 0.02;
+        var x = cx + Math.cos(angle) * r * 0.85;
+        var y = cy + Math.sin(angle) * r * 0.85;
+        var isActive = labels[i] === state.activeMod || (i === 0 && VEC.passage);
+        ctx.fillStyle = isActive ? colors[i] + '44' : colors[i] + '11';
+        ctx.shadowColor = isActive ? colors[i] : 'transparent';
+        ctx.shadowBlur = isActive ? 10 : 0;
+        ctx.beginPath();
+        ctx.arc(x, y, isActive ? 6 : 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = isActive ? colors[i] : '#333';
+        ctx.font = isActive ? '5px Consolas' : '4px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(labels[i], x, y - 8);
+    }
+
+    ctx.fillStyle = 'rgba(255,215,61,0.05)';
+    ctx.font = '6px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('📊 VEC · Marketplace', cx, cy + r + 8);
+}
+
+function drawModules() {
+    var r = radius * 0.3;
+    var mods = ['VEC', 'DOOR', 'GENIE'];
+    var colors = ['#6b6bff', '#ff6b6b', '#ffd93d'];
+    var syms = ['◈', '🚪', '🧞'];
+
+    for (var i = 0; i < 3; i++) {
+        var angle = (i / 3) * Math.PI * 2 + state.t * 0.03 + 0.3;
+        var x = cx + Math.cos(angle) * r * 0.6;
+        var y = cy + Math.sin(angle) * r * 0.6;
+        ctx.fillStyle = colors[i] + '33';
+        ctx.shadowColor = colors[i];
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = colors[i];
+        ctx.font = '6px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(syms[i], x, y - 6);
+        ctx.fillStyle = '#444';
+        ctx.font = '4px Consolas';
+        ctx.textBaseline = 'top';
+        ctx.fillText(mods[i], x, y + 6);
+    }
+}
+
+function drawTrades() {
+    var r = radius * 0.4;
+    var count = VEC.tradeCount;
+    var max = 10;
+    var pct = Math.min(1, count / max);
+
+    // Trade-Balken
+    ctx.fillStyle = '#1a1a2a';
+    ctx.fillRect(cx + r * 0.5, cy + r * 0.5, 40, 3);
+    ctx.fillStyle = '#4f4';
+    ctx.fillRect(cx + r * 0.5, cy + r * 0.5, 40 * pct, 3);
+
+    ctx.fillStyle = '#666';
+    ctx.font = '4px Consolas';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('TRADES: ' + count, cx + r * 0.5, cy + r * 0.5 + 5);
+
+    // Letzter Trade
+    if (VEC.trades.length > 0) {
+        var last = VEC.trades[VEC.trades.length - 1];
+        ctx.fillStyle = '#444';
+        ctx.font = '3px Consolas';
+        ctx.textBaseline = 'top';
+        ctx.fillText('last: ' + last.item + ' → ' + last.rating, cx + r * 0.5, cy + r * 0.5 + 15);
+    }
+}
+
+function drawCenter() {
+    var r = radius * 0.08;
+    var stateColor = VEC.state === 'control-ready' ? '#ff44ff' :
+                     VEC.state === 'stable-transition' ? '#4f4' :
+                     VEC.state === 'api-connected' ? '#6cf' : '#666';
+
+    ctx.fillStyle = stateColor + '22';
+    ctx.shadowColor = stateColor;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = stateColor;
+    ctx.font = 'bold 8px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('◈', cx, cy);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.font = '3px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText(VEC.state, cx, cy + r + 6);
+
+    // Passage Status
+    ctx.fillStyle = VEC.passage ? 'rgba(68,255,68,0.03)' : 'rgba(255,68,68,0.03)';
+    ctx.font = '3px Consolas';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(VEC.passage ? '🚪 PASSAGE' : '🚫 BLOCKED', cx, cy - r - 6);
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+document.getElementById('btn-start').onclick = function() {
+    state.running = !state.running;
+    this.textContent = state.running ? '⏸ STOP' : '▶ START';
+    document.getElementById('state-display').textContent = state.running ? '● läuft' : '● gestoppt';
+    document.getElementById('state-display').style.color = state.running ? 'var(--gold)' : '#666';
+    log(state.running ? '▶ Börse gestartet' : '⏸ Börse gestoppt', 'market');
+};
+
+document.getElementById('btn-door').onclick = function() { DOOR_passage(); };
+document.getElementById('btn-doo').onclick = function() { DOO_control(); };
+document.getElementById('btn-vec').onclick = function() {
+    var item = state.items[state.cycle % state.items.length];
+    VECTOR_route(item);
+};
+document.getElementById('btn-genie').onclick = function() {
+    var item = state.items[state.cycle % state.items.length];
+    GENIE_rate(item);
+};
+document.getElementById('btn-api').onclick = function() { API_connect(); };
+document.getElementById('btn-trade').onclick = function() {
+    var item = state.items[state.cycle % state.items.length];
+    VEC_trade(item);
+};
+
+document.getElementById('btn-reset').onclick = function() {
+    state.running = false;
+    state.cycle = 0;
+    state.t = 0;
+    VEC.control = false;
+    VEC.passage = false;
+    VEC.state = 'idle';
+    VEC.trades = [];
+    VEC.doorCount = 0;
+    VEC.dooCount = 0;
+    VEC.vecCount = 0;
+    VEC.genieCount = 0;
+    VEC.apiCount = 0;
+    VEC.tradeCount = 0;
+    document.getElementById('btn-start').textContent = '▶ START';
+    document.getElementById('state-display').textContent = '● reset';
+    document.getElementById('state-display').style.color = '#f44';
+    document.getElementById('cycle-display').textContent = 'BÖRSE 0';
+    document.getElementById('door-value').textContent = '0';
+    document.getElementById('doo-value').textContent = '0';
+    document.getElementById('vec-value').textContent = '0';
+    document.getElementById('trade-value').textContent = '0';
+    var els = document.querySelectorAll('.mod');
+    for (var i = 0; i < els.length; i++) {
+        els[i].classList.remove('active');
+    }
+    document.querySelector('.mod[data-mod="VEC"]').classList.add('active');
+    log('⟲ RESET — Börse zurückgesetzt', 'market');
+};
+
+document.getElementById('btn-auto').onclick = function() {
+    state.autoMode = !state.autoMode;
+    this.textContent = state.autoMode ? '⏸ PAUSE' : '▶ AUTO';
+    if (state.autoMode) {
+        state.running = true;
+        document.getElementById('btn-start').textContent = '⏸ STOP';
+        document.getElementById('state-display').textContent = '● auto';
+        document.getElementById('state-display').style.color = 'var(--gold)';
+        if (window.autoInterval) clearInterval(window.autoInterval);
+        window.autoInterval = setInterval(function() {
+            var mods = ['DOOR', 'DOO', 'VEC', 'GENIE', 'API', 'TRADE'];
+            var idx = Math.floor(Math.random() * mods.length);
+            switch(mods[idx]) {
+                case 'DOOR': DOOR_passage(); break;
+                case 'DOO': DOO_control(); break;
+                case 'VEC': var i = state.items[state.cycle % state.items.length]; VECTOR_route(i); break;
+                case 'GENIE': var i2 = state.items[state.cycle % state.items.length]; GENIE_rate(i2); break;
+                case 'API': API_connect(); break;
+                case 'TRADE': var i3 = state.items[state.cycle % state.items.length]; VEC_trade(i3); break;
+            }
+            log('🔄 ' + mods[idx] + ' · Trades: ' + VEC.tradeCount, 'market');
+        }, 2500);
+        log('▶ AUTO · Börse rotiert', 'market');
+    } else {
+        clearInterval(window.autoInterval);
+        log('⏸ AUTO pausiert', 'market');
+    }
+};
+
+// ============================================================
+// MOD-KLICKS
+// ============================================================
+var modEls = document.querySelectorAll('.mod');
+for (var i = 0; i < modEls.length; i++) {
+    modEls[i].onclick = function() {
+        var key = this.getAttribute('data-mod');
+        activateMod(key);
+    };
+}
+
+// ============================================================
+// TASTATUR
+// ============================================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === ' ') { e.preventDefault(); document.getElementById('btn-start').click(); }
+    if (e.key === '1') DOOR_passage();
+    if (e.key === '2') DOO_control();
+    if (e.key === '3') { var i = state.items[state.cycle % state.items.length]; VECTOR_route(i); }
+    if (e.key === '4') { var i2 = state.items[state.cycle % state.items.length]; GENIE_rate(i2); }
+    if (e.key === '5') API_connect();
+    if (e.key === '6') { var i3 = state.items[state.cycle % state.items.length]; VEC_trade(i3); }
+    if (e.key === 'x') document.getElementById('btn-reset').click();
+    if (e.key === 'a') document.getElementById('btn-auto').click();
+});
+
+// ============================================================
+// UHR
+// ============================================================
+function updateClock() {
+    document.getElementById('clock').textContent = '⏱️ ' + new Date().toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// INIT
+// ============================================================
+log('📊 VEC · VirtualMarketplace · Founder', 'market');
+log('🚪 DOOR · Durchgang', 'door');
+log('🔑 DOO/IT · Kontrolle', 'doo');
+log('◈ VECTOR · Routing', 'vec');
+log('🧞 GENIE · Bewertung', 'genie');
+log('🔌 API · Durchlass', 'api');
+log('⌨️  1=DOOR 2=DOO 3=VEC 4=GENIE 5=API 6=TRADE  x=Reset  a=Auto', 'market');
+
+setTimeout(function() {
+    state.running = true;
+    document.getElementById('btn-start').textContent = '⏸ STOP';
+    document.getElementById('state-display').textContent = '● läuft';
+    document.getElementById('state-display').style.color = 'var(--gold)';
+    log('▶ VEC · Börse automatisch gestartet', 'market');
+}, 500);
 </script>
-
 </body>
 </html>
