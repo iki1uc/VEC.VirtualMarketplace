@@ -4,8 +4,79 @@ TYPE: Station
 ROLE: Market-Exchange
 MODE: active
 STATE: dynamic
+
 VECTOR: enabled
 GENIE: linked
 CONTROL: DOO/IT
 PASSAGE: DOOR
 API: required
+
+AXIS:
+  ORBIT: 8
+  RESPO: 8
+  MATRIX: 64
+  MODE:
+    - ax
+    - xa
+    - air
+    - aiv
+
+TMP:
+  MODE: dual
+  TRANSITION:
+    - tmp → stabil
+    - stabil → tmp
+  POINT: 9
+  EXPANSION:
+    - 3to9
+    - 9to81
+
+VALUE-SOURCES:
+  GOLDENE-6:
+    - boerse.json
+    - markt3.json
+    - REAL.json
+    - AIR.json
+    - BIL.json
+    - USE.json
+
+FORM-SOURCES:
+  MAGISCHE-6:
+    - index.html
+    - ID.html
+    - USER.html
+    - USE.html
+    - tmp.core
+    - ice.core
+
+VECTORS:
+  MARKT: Preis, Volumen, Momentum
+  INDUSTRY: Produktion, Last, Temperatur
+  BOERSE: Index, Delta, Bid
+  WETTER: Wind, Regen, Temperatur
+  SOCCER: Position, Höhe
+  RAW: ROM‑4‑Werte
+  ORBIT: Winkel, Radius, Geschwindigkeit
+  RESPO: Service, Treffer, Qualität
+
+SYNC:
+  ROOT: enabled
+  ETAGE: enabled
+  KIND: enabled
+  MODE:
+    - arg
+    - xarg
+    - tmparg
+
+BRIDGE:
+  ROOT ↔ ETAGE ↔ KIND
+  STATUS: ready
+  CHANNEL: broadcast
+
+SECURITY:
+  DOO/IT: control
+  DOOR: passage
+  LIMIT: soft
+  FILTER: vector-based
+
+READY: 100%
