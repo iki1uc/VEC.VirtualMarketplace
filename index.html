@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>◈ MARKT · VEC · STATION · iki1uc</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#04070c; --bg2:#080e18; --bg3:#0c1622;
+    --fg:#c8d8e8; --dim:#5a7288; --dim2:#2a3644;
+    --gold:#f0d080; --gold2:#ffe9b0;
+    --violet:#b388ff; --cyan:#6cf; --green:#8cf0d0;
+    --pink:#ff9ec4; --red:#ff6b8a; --orange:#ffa040;
+    --door:#ff6b6b; --doo:#ff44ff; --vec:#6b6bff;
+    --genie:#ffd93d; --api:#6cf; --trade:#4f4;
+    --line:rgba(120,180,220,0.08);
+    --line2:rgba(120,180,220,0.04);
+    --mono:'Consolas','Courier New',monospace;
+    --serif:'Yu Mincho','Hiragino Mincho ProN',serif;
+  }
+  html,body{height:100%;}
+  body{
+    background:#04070c;
+    background-image:radial-gradient(ellipse at 50% 20%,#0c1a2c 0%,#050a14 55%,#010205 100%);
+    color:var(--fg);
+    font-family:var(--mono);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* ═══ LAYOUT ═══ */
+  #hub{
+    display:flex; flex-direction:column;
+    min-height:100vh;
+    padding:8px 12px 12px;
+    gap:6px;
+    max-width:1700px; margin:0 auto;
+  }
+
+  /* ═══ HEADER ═══ */
+  header{
+    display:flex; flex-wrap:wrap;
+    justify-content:space-between; align-items:center;
+    padding:10px 16px;
+    background:var(--bg2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    gap:10px;
+    flex-shrink:0;
+  }
+  header .brand{
+    font-family:var(--serif);
+    font-size:18px; letter-spacing:3px;
+    background:linear-gradient(135deg,#ffd93d,#8cf0d0,#b388ff,#f0d080);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    display:flex; align-items:center; gap:10px;
+  }
+  header .brand .sym{
+    -webkit-text-fill-color:#f0d080;
+    font-size:22px;
+    text-shadow:0 0 16px rgba(240,208,120,0.6);
+  }
+  header .brand small{
+    -webkit-text-fill-color:#5a7288;
+    font-family:var(--mono);
+    font-size:10px; letter-spacing:2px;
+  }
+  .hdr-stats{
+    display:flex; gap:14px; flex-wrap:wrap;
+    font-size:10px; color:var(--dim);
+    align-items:center;
+  }
+  .hdr-stats b{font-weight:bold;color:var(--fg);}
+  .hdr-stats b.ok{color:var(--green);}
+  .hdr-stats b.gold{color:var(--gold);}
+  .hdr-stats b.cy{color:var(--cyan);}
+  .hdr-stats b.vi{color:var(--violet);}
+  .hdr-stats b.pk{color:var(--pink);}
+  .hdr-stats b.rd{color:var(--red);}
+  .hdr-stats .led{
+    display:inline-block;width:7px;height:7px;
+    border-radius:50%;margin-right:4px;vertical-align:middle;
+  }
+  .led.green{background:#8cf0d0;box-shadow:0 0 8px #8cf0d0;}
+  .led.gold{background:#f0d080;box-shadow:0 0 8px #f0d080;}
+  .led.violet{background:#b388ff;box-shadow:0 0 8px #b388ff;}
+  .led.pulse{animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* ═══ MAIN GRID ═══ */
+  #main{
+    display:grid;
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap:6px;
+    align-items:start;
+  }
+  @media(max-width:1200px){ #main{grid-template-columns:1fr 1fr;} }
+  @media(max-width:820px){ #main{grid-template-columns:1fr;} }
+
+  /* ═══ PANEL ═══ */
+  .panel{
+    background:var(--bg2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:6px;
+    min-width:0;
+  }
+  .panel h3{
+    font-size:10px; letter-spacing:2px;
+    color:var(--violet);
+    text-transform:uppercase;
+    margin-bottom:8px;
+    padding-bottom:5px;
+    border-bottom:1px solid var(--line2);
+    display:flex; justify-content:space-between;
+    align-items:center;
+    font-family:var(--serif);
+    font-weight:normal;
+  }
+  .panel h3 .badge{
+    font-size:8.5px; color:var(--dim);
+    background:var(--bg3);
+    padding:1px 7px;
+    border-radius:8px;
+    letter-spacing:0.5px;
+    font-family:var(--mono);
+  }
+  .panel h3 .badge.ok{color:var(--green);}
+  .panel h3 .badge.warn{color:var(--gold);}
+  .panel h3 .badge.err{color:var(--red);}
+
+  /* ═══ MARKET-TICK GRID (10×10 = 100 slots) ═══ */
+  #tickWrap{
+    display:flex; flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  #tickGrid{
+    display:grid;
+    grid-template-columns:repeat(10,1fr);
+    grid-template-rows:repeat(10,1fr);
+    gap:2px;
+    aspect-ratio:1;
+    background:#050a12;
+    padding:6px;
+    border-radius:8px;
+    border:1px solid rgba(240,208,120,0.15);
+    width:100%;
+    max-width:340px;
+  }
+  .slot{
+    background:rgba(20,28,40,0.5);
+    border-radius:2px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:6px;
+    color:#3a4a5a;
+    cursor:pointer;
+    transition:all .2s;
+    position:relative;
+    user-select:none;
+  }
+  .slot:hover{
+    transform:scale(1.15);
+    z-index:2;
+    border-color:var(--gold);
+  }
+  .slot.done{
+    background:rgba(140,240,208,0.15);
+    color:#8cf0d0;
+  }
+  .slot.user{
+    background:rgba(240,208,120,0.32);
+    color:#ffe9b0;
+    font-weight:bold;
+    box-shadow:inset 0 0 8px rgba(240,208,120,0.5);
+  }
+  .slot.runner{
+    outline:2px solid var(--cyan);
+    outline-offset:-2px;
+    background:rgba(108,204,255,0.25);
+    color:#fff;
+    animation:slotPulse 0.75s ease-in-out infinite;
+  }
+  @keyframes slotPulse{
+    0%,100%{box-shadow:0 0 6px rgba(108,204,255,0.5);}
+    50%{box-shadow:0 0 16px rgba(108,204,255,0.9);}
+  }
+  .slot .id{
+    position:absolute;
+    top:0px; left:1px;
+    font-size:5px;
+    color:#3a4a5a;
+  }
+  .slot.done .id{color:#4a7a6a;}
+  .slot.user .id{color:#7a6a3a;}
+
+  /* Legend */
+  .legend{
+    display:flex;
+    gap:10px;
+    font-size:9px;
+    color:var(--dim);
+    justify-content:center;
+  }
+  .legend .it{
+    display:flex; align-items:center; gap:4px;
+  }
+  .legend .sw{
+    width:8px;height:8px;border-radius:2px;
+  }
+
+  /* ═══ TICK INFO ═══ */
+  .tick-info{
+    display:flex; justify-content:space-between;
+    width:100%;
+    font-size:10px;
+    padding:4px 8px;
+    background:var(--bg3);
+    border-radius:4px;
+    border-left:3px solid var(--gold);
+  }
+  .tick-info .k{color:var(--dim);}
+  .tick-info .v{font-weight:bold;color:var(--gold);}
+
+  /* ═══ VEC CANVAS ═══ */
+  #vecWrap{
+    position:relative;
+    aspect-ratio:1;
+    background:#050a12;
+    border-radius:8px;
+    border:1px solid rgba(179,136,255,0.2);
+    overflow:hidden;
+    margin:0 auto;
+    max-width:340px;
+    width:100%;
+  }
+  #vecCanvas{
+    width:100%; height:100%;
+    display:block;
+  }
+  #vecOverlay{
+    position:absolute;
+    bottom:6px; left:8px;
+    font-size:8px;
+    color:#5a7288;
+    pointer-events:none;
+    background:rgba(0,0,0,0.7);
+    padding:2px 6px;
+    border-radius:3px;
+    letter-spacing:1px;
+  }
+
+  /* ═══ METRICS ═══ */
+  .metrics{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px;
+    margin-top:8px;
+  }
+  .metric{
+    display:flex; justify-content:space-between;
+    padding:4px 8px;
+    background:rgba(0,0,0,0.35);
+    border-radius:4px;
+    border-left:3px solid var(--cyan);
+    font-size:10px;
+  }
+  .metric.gold{border-left-color:var(--gold);}
+  .metric.green{border-left-color:var(--green);}
+  .metric.violet{border-left-color:var(--violet);}
+  .metric.pink{border-left-color:var(--pink);}
+  .metric.red{border-left-color:var(--red);}
+  .metric .lbl{color:var(--dim);}
+  .metric .v{font-weight:bold;color:var(--fg);}
+  .metric.gold .v{color:var(--gold);}
+  .metric.green .v{color:var(--green);}
+  .metric.violet .v{color:var(--violet);}
+  .metric.pink .v{color:var(--pink);}
+  .metric.red .v{color:var(--red);}
+  .metric.cyan .v{color:var(--cyan);}
+
+  /* ═══ MODULES ═══ */
+  .mods{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:4px;
+  }
+  .mod{
+    background:var(--bg3);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:6px 4px;
+    text-align:center;
+    cursor:pointer;
+    transition:.2s;
+    font-size:9px;
+  }
+  .mod:hover{
+    border-color:var(--gold);
+    background:rgba(240,208,120,0.05);
+  }
+  .mod.active{
+    border-color:var(--gold);
+    background:rgba(240,208,120,0.1);
+    box-shadow:0 0 10px rgba(240,208,120,0.3);
+  }
+  .mod .sym{
+    display:block;
+    font-size:15px;
+    margin-bottom:2px;
+  }
+  .mod .label{
+    color:var(--fg);
+    font-weight:bold;
+    letter-spacing:0.5px;
+  }
+  .mod .desc{
+    color:var(--dim);
+    font-size:7px;
+    margin-top:1px;
+  }
+
+  /* ═══ ACTIONS ═══ */
+  .acts{
+    display:flex; gap:4px; flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .acts button{
+    flex:1; min-width:70px;
+    background:var(--bg3);
+    border:1px solid var(--line);
+    color:var(--fg);
+    padding:5px 8px;
+    border-radius:4px;
+    font-family:inherit;
+    font-size:9px;
+    letter-spacing:1px;
+    cursor:pointer;
+    transition:.2s;
+    text-transform:uppercase;
+  }
+  .acts button:hover{
+    border-color:var(--cyan);
+    background:rgba(108,204,255,0.08);
+    color:var(--cyan);
+  }
+  .acts button.door{border-color:rgba(255,107,107,0.4);color:var(--door);}
+  .acts button.doo{border-color:rgba(255,68,255,0.4);color:var(--doo);}
+  .acts button.vec{border-color:rgba(107,107,255,0.4);color:var(--vec);}
+  .acts button.genie{border-color:rgba(255,217,61,0.4);color:var(--genie);}
+  .acts button.api{border-color:rgba(108,204,255,0.4);color:var(--api);}
+  .acts button.trade{border-color:rgba(68,255,68,0.4);color:var(--trade);}
+  .acts button.gold{border-color:rgba(240,208,120,0.4);color:var(--gold);}
+  .acts button.red{border-color:rgba(255,107,138,0.4);color:var(--red);}
+  .acts button.door:hover{background:var(--door);color:#000;}
+  .acts button.doo:hover{background:var(--doo);color:#000;}
+  .acts button.vec:hover{background:var(--vec);color:#000;}
+  .acts button.genie:hover{background:var(--genie);color:#000;}
+  .acts button.api:hover{background:var(--api);color:#000;}
+  .acts button.trade:hover{background:var(--trade);color:#000;}
+  .acts button.gold:hover{background:var(--gold);color:#000;}
+  .acts button.red:hover{background:var(--red);color:#000;}
+
+  /* ═══ ARG.SYNC ROWS ═══ */
+  .sync-row{
+    display:grid;
+    grid-template-columns:55px 1fr 48px;
+    gap:6px;
+    align-items:center;
+    padding:4px 0;
+    border-bottom:1px dashed var(--line2);
+    font-size:10px;
+  }
+  .sync-row:last-child{border-bottom:none;}
+  .sync-row .lbl{
+    color:var(--dim);
+    font-size:9.5px;
+    font-weight:bold;
+    letter-spacing:1px;
+  }
+  .sync-row .bar{
+    height:6px;
+    background:var(--bg3);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .sync-row .bar .f{
+    height:100%;
+    transition:width .35s;
+  }
+  .sync-row .bar .f.arg{background:linear-gradient(90deg,#1a3a2a,#8cf0d0);}
+  .sync-row .bar .f.xarg{background:linear-gradient(90deg,#3a2a0a,#f0d080);}
+  .sync-row .bar .f.tmparg{background:linear-gradient(90deg,#2a1a4a,#b388ff);}
+  .sync-row .val{
+    text-align:right;
+    font-weight:bold;
+    font-size:10px;
+  }
+  .sync-row .val.arg{color:var(--green);}
+  .sync-row .val.xarg{color:var(--gold);}
+  .sync-row .val.tmparg{color:var(--violet);}
+
+  /* ═══ RAW ROWS ═══ */
+  .raw-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:3px 8px;
+    font-size:9.5px;
+  }
+  .raw-row{
+    display:flex; justify-content:space-between;
+    padding:2px 0;
+    border-bottom:1px dashed var(--line2);
+  }
+  .raw-row .k{color:var(--dim);}
+  .raw-row .v{color:var(--cyan);font-weight:bold;}
+
+  /* ═══ USER-TREE ═══ */
+  #userTree{
+    max-height:160px;
+    overflow-y:auto;
+    padding-right:2px;
+  }
+  #userTree::-webkit-scrollbar{width:5px;}
+  #userTree::-webkit-scrollbar-thumb{background:var(--line);}
+  .urow{
+    display:grid;
+    grid-template-columns:60px 70px 1fr;
+    gap:6px;
+    padding:4px 8px;
+    background:rgba(240,208,120,0.06);
+    border-left:3px solid var(--gold);
+    border-radius:4px;
+    margin-bottom:3px;
+    font-size:9.5px;
+    animation:uIn .3s ease-out;
+  }
+  @keyframes uIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:none;}}
+  .urow .blk{color:var(--dim);}
+  .urow .itm{color:var(--genie);font-weight:bold;}
+  .urow .bse{color:var(--gold);text-align:right;}
+
+  /* ═══ BLOCK-CHAIN ═══ */
+  #chain{
+    display:flex;
+    gap:4px;
+    overflow-x:auto;
+    padding-bottom:4px;
+  }
+  #chain::-webkit-scrollbar{height:5px;}
+  #chain::-webkit-scrollbar-thumb{background:var(--line);}
+  .chip{
+    flex-shrink:0;
+    width:78px;
+    padding:5px 7px;
+    background:var(--bg3);
+    border:1px solid var(--line);
+    border-radius:5px;
+    text-align:center;
+    font-size:9px;
+    transition:.25s;
+  }
+  .chip.active{
+    border-color:var(--cyan);
+    background:rgba(108,204,255,0.1);
+    box-shadow:0 0 10px rgba(108,204,255,0.3);
+  }
+  .chip.done{
+    border-color:var(--green);
+    background:rgba(140,240,208,0.08);
+  }
+  .chip.future{opacity:0.35;}
+  .chip .base{
+    color:var(--gold);
+    font-weight:bold;
+    font-size:11px;
+  }
+  .chip .bar{
+    height:3px;
+    background:#0a1420;
+    border-radius:2px;
+    margin:4px 0 3px;
+    overflow:hidden;
+  }
+  .chip .bar .f{
+    height:100%;
+    background:linear-gradient(90deg,#3a5a4a,#8cf0d0);
+    transition:width .25s;
+  }
+  .chip .cnt{
+    color:var(--dim);
+    font-size:8px;
+  }
+  .chip .usr{
+    color:var(--gold);
+    font-size:9px;
+    font-weight:bold;
+  }
+
+  /* ═══ LOG ═══ */
+  #log{
+    background:#02040a;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:10px;
+    line-height:1.55;
+    max-height:140px;
+    overflow-y:auto;
+  }
+  #log::-webkit-scrollbar{width:5px;}
+  #log::-webkit-scrollbar-thumb{background:var(--line);}
+  #log .ln{
+    padding:0.5px 0;
+    display:flex; gap:6px;
+  }
+  #log .ts{color:var(--dim2);flex-shrink:0;font-size:9px;}
+  #log .msg{flex:1;word-break:break-word;}
+  #log .msg.ok{color:var(--green);}
+  #log .msg.warn{color:var(--gold);}
+  #log .msg.err{color:var(--red);}
+  #log .msg.info{color:var(--cyan);}
+  #log .msg.door{color:var(--door);}
+  #log .msg.doo{color:var(--doo);}
+  #log .msg.vec{color:var(--vec);}
+  #log .msg.genie{color:var(--genie);}
+  #log .msg.api{color:var(--api);}
+  #log .msg.trade{color:var(--trade);}
+  #log .msg.market{color:var(--gold);}
+
+  /* ═══ CLI ═══ */
+  #cli{
+    display:flex; align-items:center;
+    gap:6px;
+    margin-top:6px;
+    padding:6px 10px;
+    background:var(--bg3);
+    border-radius:5px;
+    border:1px solid var(--line);
+    font-size:11px;
+  }
+  #cli .prompt{
+    color:var(--gold);
+    font-weight:bold;
+    letter-spacing:1px;
+  }
+  #cli input{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--fg);
+    font-family:var(--mono);
+    font-size:11px;
+    outline:none;
+  }
+  #cli input::placeholder{color:var(--dim2);}
+
+  /* ═══ FL76 ═══ */
+  #fl76{
+    position:fixed; bottom:10px; right:10px;
+    padding:5px 10px;
+    background:rgba(4,7,12,0.95);
+    border:1px solid rgba(140,240,208,0.3);
+    border-radius:5px;
+    font-size:9px;
+    letter-spacing:1px;
+    color:var(--green);
+    z-index:12;
+    text-align:right;
+    min-width:100px;
+  }
+  #fl76 .num{font-size:14px;font-weight:bold;}
+  #fl76.outside{border-color:rgba(255,107,138,0.5);color:var(--red);}
+  #fl76.edge{border-color:rgba(240,208,120,0.5);color:var(--gold);}
+
+  /* ═══ CONNECT PANEL ═══ */
+  .conn-row{
+    display:flex; align-items:center; gap:6px;
+    padding:5px 8px;
+    background:var(--bg3);
+    border-radius:4px;
+    border-left:3px solid var(--cyan);
+    font-size:10px;
+    margin-bottom:4px;
+  }
+  .conn-row .lbl{color:var(--dim);}
+  .conn-row .state{margin-left:auto;font-weight:bold;}
+  .conn-row .state.on{color:var(--green);}
+  .conn-row .state.off{color:var(--red);}
+  .conn-row .state.wait{color:var(--gold);}
+
+  @media(max-width:720px){
+    #hub{padding:6px;}
+    header .brand{font-size:14px;letter-spacing:2px;}
+    header .brand .sym{font-size:16px;}
+    .slot{font-size:5px;}
+    .acts button{min-width:60px;font-size:8px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="hub">
+
+  <!-- ═══ HEADER ═══ -->
+  <header>
+    <div class="brand">
+      <span class="sym">◈</span>
+      MARKT · VEC · STATION
+      <small>· iki1uc · index.html</small>
+    </div>
+    <div class="hdr-stats">
+      <span><span class="led green pulse"></span>ROOT <b class="ok" id="hRoot">—</b></span>
+      <span><span class="led gold"></span>SYS <b class="gold" id="hSys">—</b></span>
+      <span>TRADES <b class="cy" id="hTrades">0</b></span>
+      <span>USERS <b class="gold" id="hUsers">0</b></span>
+      <span>STATE <b class="vi" id="hState">idle</b></span>
+      <span>FL76 <b class="cy" id="hFl">76</b></span>
+      <span id="hClock" style="color:#4a5a6a;">⏱️ --:--:--</span>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN GRID ═══ -->
+  <div id="main">
+
+    <!-- SPALTE 1: MARKET-TICK + USER-TREE -->
+    <div>
+      <div class="panel">
+        <h3>◈ Market-Tick <span class="badge" id="tickBadge">1000–1099</span></h3>
+        <div id="tickWrap">
+          <div id="tickGrid"></div>
+          <div class="legend">
+            <span class="it"><span class="sw" style="background:rgba(140,240,208,0.4)"></span>done</span>
+            <span class="it"><span class="sw" style="background:rgba(240,208,120,0.5)"></span>user</span>
+            <span class="it"><span class="sw" style="background:rgba(108,204,255,0.5)"></span>runner</span>
+          </div>
+        </div>
+        <div class="acts" style="margin-top:8px;">
+          <button class="gold" id="btnRun">▶ RUN</button>
+          <button id="btnStep">⏭ STEP</button>
+          <button class="vec" id="btnAuto">♾ AUTO</button>
+          <button id="btnSkip">⏩ SKIP</button>
+          <button class="red" id="btnReset">⟲ RESET</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>◈ User-Tree <span class="badge gold" id="userBadge">0</span></h3>
+        <div id="userTree">
+          <div style="color:var(--dim);font-size:10px;text-align:center;padding:10px 0;">
+            — noch keine Markt-User —
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>◈ Block-Chain <span class="badge" id="chainBadge">0 / 10</span></h3>
+        <div id="chain"></div>
+      </div>
+    </div>
+
+    <!-- SPALTE 2: VEC CANVAS + METRICS + ARG.SYNC -->
+    <div>
+      <div class="panel">
+        <h3>◈ VEC · Ring <span class="badge vi" id="vecBadge">idle</span></h3>
+        <div id="vecWrap">
+          <canvas id="vecCanvas"></canvas>
+          <div id="vecOverlay">◈ VEC · DOOR/DOO/IT · GENIE · API · TRADE</div>
+        </div>
+        <div class="metrics">
+          <div class="metric red"><span class="lbl">DOOR</span><span class="v" id="mDoor">0</span></div>
+          <div class="metric pink"><span class="lbl">DOO/IT</span><span class="v" id="mDoo">0</span></div>
+          <div class="metric violet"><span class="lbl">VECTOR</span><span class="v" id="mVec">0</span></div>
+          <div class="metric gold"><span class="lbl">GENIE</span><span class="v" id="mGenie">0</span></div>
+          <div class="metric cyan"><span class="lbl">API</span><span class="v" id="mApi">0</span></div>
+          <div class="metric green"><span class="lbl">TRADES</span><span class="v" id="mTrades">0</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>◈ arg.sync · kernel <span class="badge ok" id="syncBadge">synced</span></h3>
+        <div id="syncRows"></div>
+        <div class="acts">
+          <button class="gold" id="btnSync">⟳ sync</button>
+          <button class="vec" id="btnSyncUp">⬆ root</button>
+          <button id="btnSyncDown">⬇ sys</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>◈ RAW · Bridge <span class="badge" id="rawBadge">8 roms</span></h3>
+        <div class="raw-grid" id="rawGrid"></div>
+      </div>
+    </div>
+
+    <!-- SPALTE 3: MODULES + CONNECT + LOG -->
+    <div>
+      <div class="panel">
+        <h3>◈ Module <span class="badge" id="modBadge">VEC</span></h3>
+        <div class="mods">
+          <div class="mod active" data-mod="VEC">
+            <span class="sym">◈</span>
+            <span class="label">VEC</span>
+            <span class="desc">exchange</span>
+          </div>
+          <div class="mod" data-mod="DOOR">
+            <span class="sym">🚪</span>
+            <span class="label">DOOR</span>
+            <span class="desc">passage</span>
+          </div>
+          <div class="mod" data-mod="GENIE">
+            <span class="sym">🧞</span>
+            <span class="label">GENIE</span>
+            <span class="desc">bewertung</span>
+          </div>
+        </div>
+
+        <div class="acts" style="margin-top:8px;">
+          <button class="door" id="btnDoor">🚪 door</button>
+          <button class="doo" id="btnDoo">🔑 doo/it</button>
+          <button class="vec" id="btnVec">◈ vector</button>
+          <button class="genie" id="btnGenie">🧞 genie</button>
+          <button class="api" id="btnApi">🔌 api</button>
+          <button class="trade" id="btnTrade">📊 trade</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>◈ Verbindungen <span class="badge" id="connBadge">—</span></h3>
+        <div class="conn-row">
+          <span class="lbl">parent</span>
+          <span style="color:var(--cyan);">sys.html / root</span>
+          <span class="state wait" id="cParent">warte</span>
+        </div>
+        <div class="conn-row">
+          <span class="lbl">bc</span>
+          <span style="color:var(--cyan);">iki1uc-market</span>
+          <span class="state wait" id="cBC">warte</span>
+        </div>
+        <div class="conn-row">
+          <span class="lbl">rom</span>
+          <span style="color:var(--cyan);">8 · hdf</span>
+          <span class="state on" id="cRom">aktiv</span>
+        </div>
+        <div class="conn-row">
+          <span class="lbl">mind</span>
+          <span style="color:var(--cyan);">mind.html</span>
+          <span class="state wait" id="cMind">—</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>◈ Log <span class="badge" id="logBadge">live</span></h3>
+        <div id="log"></div>
+        <div id="cli">
+          <span class="prompt">markt&gt;</span>
+          <input id="cmd" placeholder="befehl · help · sync · trade · door · reset" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- FL76 -->
+<div id="fl76">
+  <div style="font-size:8px;color:var(--dim2);">FL76</div>
+  <div class="num" id="fl76num">76</div>
+</div>
+
+<script>
+"use strict";
+// ═══════════════════════════════════════════════════════════════════
+// ◈ MARKT · VEC · STATION · iki1uc
+// Der Markt-Kern: TMP-Läufer · VEC-Module · arg.sync · Root ↔ Sys
+// ═══════════════════════════════════════════════════════════════════
+
+// ─── STATION KONSTANTEN ─────────────────────────────────────
+const N = 100;
+const BLOCK_STEP = 100;
+const BLOCK_START = 1000;
+const INIT_BLOCKS = 10;
+const USER_SLOTS = [13, 47, 88, 21, 73, 5, 96, 34, 62, 8,
+                    55, 91, 17, 79, 42, 68, 29, 3, 85, 51];
+
+const ITEMS = ['BTC','ETH','XRP','SOL','DOGE','ADA','DOT','MATIC','LINK','AVAX'];
+
+// ─── RAW-ROM (8 Kanäle) ─────────────────────────────────────
+const ROMS = ['d','e','i','n','o','r','s','u'];
+
+// ─── VEC STATE ──────────────────────────────────────────────
+const VEC = {
+  active: true,
+  vector: true,
+  genie: true,
+  control: false,
+  passage: false,
+  state: 'idle',
+  trades: [],
+  doorCount: 0,
+  dooCount: 0,
+  vecCount: 0,
+  genieCount: 0,
+  apiCount: 0,
+  tradeCount: 0,
+  lastRating: 0,
+};
+
+// ─── GLOBAL STATE ───────────────────────────────────────────
+const S = {
+  tick: 0,
+  blocks: [],
+  blockIdx: 0,
+  slot: 0,
+  totalRuns: 0,
+  totalUsers: 0,
+  blocksDone: 0,
+  userLog: [],
+  auto: false,
+  autoTimer: null,
+  speed: 180,
+  // arg.sync
+  arg: 0.5, xarg: 0.3, tmparg: 0.2,
+  syncCount: 0,
+  // raw
+  rawVals: {},
+  // Verbindungen
+  parentConnected: false,
+  bcConnected: false,
+  // FL76
+  flRaw: 76, flSmooth: 76, lastFrameT: 0,
+  // canvas
+  canvasT: 0,
+};
+
+// ─── BLOCK KLASSE ───────────────────────────────────────────
+function userSlotFor(blockIdx) {
+  return USER_SLOTS[blockIdx % USER_SLOTS.length];
+}
+
+class MarketBlock {
+  constructor(idx) {
+    this.idx = idx;
+    this.base = BLOCK_START + idx * BLOCK_STEP;
+    this.cells = [];
+    this.userSlot = userSlotFor(idx);
+    this.doneCount = 0;
+    this.userFound = false;
+    this.userItem = null;
+    for (let i = 0; i < N; i++) {
+      const isUser = i === this.userSlot;
+      this.cells.push({
+        slot: i,
+        state: 0,
+        isUser,
+        item: isUser ? ITEMS[idx % ITEMS.length] : ITEMS[(i + idx) % ITEMS.length],
+      });
+    }
+  }
+  complete() { return this.doneCount >= N; }
+}
+
+// ─── UTILS ─────────────────────────────────────────────────
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function rnd(a,b){ return a + Math.random()*(b-a); }
+function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ─── LOG ────────────────────────────────────────────────────
+const logEl = document.getElementById('log');
+function log(msg, cls = '') {
+  const t = new Date().toLocaleTimeString('de-DE');
+  const div = document.createElement('div');
+  div.className = 'ln';
+  div.innerHTML = `<span class="ts">[${t}]</span><span class="msg ${cls}">${msg}</span>`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+  while (logEl.children.length > 80) logEl.removeChild(logEl.firstChild);
+}
+
+// ═════════════════════════════════════════════════════════════
+// VEC MODULE
+// ═════════════════════════════════════════════════════════════
+function door_passage() {
+  VEC.passage = true;
+  VEC.doorCount++;
+  VEC.state = VEC.control ? 'stable-transition' : 'tmp-transition';
+  document.getElementById('mDoor').textContent = VEC.doorCount;
+  log(`🚪 DOOR ${VEC.control ? 'stabil' : 'tmp'} geöffnet · ${VEC.doorCount}`, 'door');
+  updateVecState();
+  sendBC('vec:door', { count: VEC.doorCount });
+}
+
+function doo_control() {
+  VEC.control = true;
+  VEC.dooCount++;
+  VEC.state = 'control-ready';
+  document.getElementById('mDoo').textContent = VEC.dooCount;
+  log(`🔑 DOO/IT Kontrolle aktiv · ${VEC.dooCount}`, 'doo');
+  updateVecState();
+  sendBC('vec:doo', { count: VEC.dooCount });
+}
+
+function vector_route(item) {
+  if (!VEC.passage) {
+    log(`◈ VECTOR blockiert · kein passage`, 'warn');
+    return null;
+  }
+  VEC.vecCount++;
+  document.getElementById('mVec').textContent = VEC.vecCount;
+  const route = `route:${item}→${VEC.state}`;
+  log(`◈ VECTOR · ${item} · ${route}`, 'vec');
+  updateVecState();
+  return route;
+}
+
+function genie_rate(item) {
+  if (!VEC.genie) return 0;
+  VEC.genieCount++;
+  const rating = Math.round(Math.random() * 100);
+  VEC.lastRating = rating;
+  document.getElementById('mGenie').textContent = VEC.genieCount;
+  log(`🧞 GENIE · "${item}" → ${rating}`, 'genie');
+  updateVecState();
+  return rating;
+}
+
+function api_connect() {
+  VEC.apiCount++;
+  VEC.state = 'api-connected';
+  document.getElementById('mApi').textContent = VEC.apiCount;
+  log(`🔌 API · verbunden · ${VEC.apiCount}`, 'api');
+  updateVecState();
+  sendBC('vec:api', { count: VEC.apiCount });
+}
+
+function vec_trade(item) {
+  if (!VEC.passage) {
+    log(`📊 Trade blockiert · kein passage`, 'warn');
+    return null;
+  }
+  const rating = genie_rate(item);
+  VEC.trades.push({ item, rating, t: S.tick });
+  VEC.tradeCount++;
+  document.getElementById('mTrades').textContent = VEC.tradeCount;
+  document.getElementById('hTrades').textContent = VEC.tradeCount;
+  log(`📊 TRADE · ${item} · rating=${rating} · ${VEC.tradeCount}`, 'trade');
+  updateVecState();
+  sendBC('vec:trade', { item, rating, count: VEC.tradeCount });
+  return { item, rating };
+}
+
+function updateVecState() {
+  document.getElementById('hState').textContent = VEC.state;
+  document.getElementById('vecBadge').textContent = VEC.state;
+}
+
+// ═════════════════════════════════════════════════════════════
+// MARKET-TICK LAUF
+// ═════════════════════════════════════════════════════════════
+function initBlocks(n) {
+  S.blocks = [];
+  for (let i = 0; i < n; i++) S.blocks.push(new MarketBlock(i));
+}
+
+function tick() {
+  if (S.blockIdx >= S.blocks.length) {
+    S.blocks.push(new MarketBlock(S.blocks.length));
+  }
+  const block = S.blocks[S.blockIdx];
+  const cell = block.cells[S.slot];
+
+  if (cell.state === 0) {
+    cell.state = cell.isUser ? 2 : 1;
+    block.doneCount++;
+    S.totalRuns++;
+
+    if (cell.isUser) {
+      block.userFound = true;
+      block.userItem = cell.item;
+      S.totalUsers++;
+      S.userLog.push({
+        blockIdx: block.idx,
+        slot: S.slot,
+        base: block.base + S.slot,
+        item: cell.item,
+      });
+      log(`👤 USER · Block ${block.idx} · Slot ${S.slot} · ${cell.item} · Basis ${block.base + S.slot}`, 'warn');
+      // Trade auslösen
+      if (!VEC.passage) door_passage();
+      if (!VEC.control) doo_control();
+      vector_route(cell.item);
+      const trade = vec_trade(cell.item);
+      if (trade) S.rawVals['d'] = Math.min(255, (S.rawVals['d'] || 0) + trade.rating);
+    } else {
+      // Regulärer Tick: kleine VEC-Aktion
+      const r = Math.random();
+      if (r < 0.3) door_passage();
+      else if (r < 0.5) doo_control();
+      else if (r < 0.7) vector_route(cell.item);
+      else if (r < 0.85) genie_rate(cell.item);
+      else api_connect();
+    }
+
+    renderSlot(block.idx, S.slot, cell);
+  }
+
+  S.slot++;
+  if (S.slot >= N) {
+    S.slot = 0;
+    if (block.complete()) {
+      S.blocksDone++;
+      log(`✔ Block ${block.idx} (${block.base}–${block.base + 99}) fertig · user=${block.userFound ? '★' : '—'}`, 'ok');
+    }
+    S.blockIdx++;
+    if (S.blockIdx < S.blocks.length) {
+      log(`▶ Block ${S.blockIdx} startet @ ${S.blocks[S.blockIdx].base}`, 'ok');
+      buildGrid();
+      buildChain();
+    }
+  }
+
+  argSync();
+  updateMetrics();
+  updateRunner();
+}
+
+// ═════════════════════════════════════════════════════════════
+// RENDER: GRID
+// ═════════════════════════════════════════════════════════════
+function buildGrid() {
+  const el = document.getElementById('tickGrid');
+  el.innerHTML = '';
+  const block = S.blocks[S.blockIdx];
+  if (!block) return;
+
+  document.getElementById('tickBadge').textContent =
+    `${block.base}–${block.base + 99}`;
+
+  for (let i = 0; i < N; i++) {
+    const cell = block.cells[i];
+    const div = document.createElement('div');
+    div.className = 'slot';
+    div.dataset.slot = i;
+    div.innerHTML = `<span class="id">${String(i).padStart(2,'0')}</span>`;
+    if (cell.state === 1) div.classList.add('done');
+    if (cell.state === 2) div.classList.add('user');
+    el.appendChild(div);
+  }
+  updateRunner();
+}
+
+function renderSlot(blockIdx, slot, cell) {
+  if (blockIdx !== S.blockIdx) return;
+  const el = document.querySelector(`.slot[data-slot="${slot}"]`);
+  if (!el) return;
+  el.classList.toggle('done', cell.state === 1);
+  el.classList.toggle('user', cell.state === 2);
+}
+
+function updateRunner() {
+  document.querySelectorAll('.slot').forEach(el => el.classList.remove('runner'));
+  const el = document.querySelector(`.slot[data-slot="${S.slot}"]`);
+  if (el) el.classList.add('runner');
+}
+
+// ═════════════════════════════════════════════════════════════
+// RENDER: CHAIN
+// ═════════════════════════════════════════════════════════════
+function buildChain() {
+  const el = document.getElementById('chain');
+  el.innerHTML = '';
+  S.blocks.forEach((b, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    if (i < S.blockIdx) chip.classList.add('done');
+    else if (i === S.blockIdx) chip.classList.add('active');
+    else chip.classList.add('future');
+    const pct = (b.doneCount / N) * 100;
+    chip.innerHTML = `
+      <div class="base">${b.base}</div>
+      <div class="bar"><div class="f" style="width:${pct}%"></div></div>
+      <div class="cnt">${b.doneCount}/100</div>
+      <div class="usr">${b.userFound ? '★ ' + (b.userItem||'') : '—'}</div>
+    `;
+    el.appendChild(chip);
+  });
+  document.getElementById('chainBadge').textContent = `${S.blockIdx} / ${S.blocks.length}`;
+}
+
+// ═════════════════════════════════════════════════════════════
+// RENDER: USER-TREE
+// ═════════════════════════════════════════════════════════════
+function renderUserTree() {
+  const el = document.getElementById('userTree');
+  if (S.userLog.length === 0) {
+    el.innerHTML = `<div style="color:var(--dim);font-size:10px;text-align:center;padding:10px 0;">— noch keine Markt-User —</div>`;
+    document.getElementById('userBadge').textContent = '0';
+    document.getElementById('hUsers').textContent = '0';
+    return;
+  }
+  el.innerHTML = '';
+  S.userLog.slice().reverse().forEach(u => {
+    const div = document.createElement('div');
+    div.className = 'urow';
+    div.innerHTML = `
+      <span class="blk">Blk ${u.blockIdx}</span>
+      <span class="itm">${u.item}</span>
+      <span class="bse">${u.base}</span>
+    `;
+    el.appendChild(div);
+  });
+  document.getElementById('userBadge').textContent = S.userLog.length;
+  document.getElementById('hUsers').textContent = S.userLog.length;
+}
+
+// ═════════════════════════════════════════════════════════════
+// RENDER: METRICS
+// ═════════════════════════════════════════════════════════════
+function updateMetrics() {
+  document.getElementById('mDoor').textContent = VEC.doorCount;
+  document.getElementById('mDoo').textContent = VEC.dooCount;
+  document.getElementById('mVec').textContent = VEC.vecCount;
+  document.getElementById('mGenie').textContent = VEC.genieCount;
+  document.getElementById('mApi').textContent = VEC.apiCount;
+  document.getElementById('mTrades').textContent = VEC.tradeCount;
+  document.getElementById('hTrades').textContent = VEC.tradeCount;
+  updateVecState();
+}
+
+// ═════════════════════════════════════════════════════════════
+// ARG.SYNC KERNEL
+// ═════════════════════════════════════════════════════════════
+function argSync() {
+  // Input aus VEC-Zählern + Block-Fortschritt
+  const cur = S.blocks[S.blockIdx];
+  const blockPct = cur ? cur.doneCount / N : 0;
+  const blocksPct = S.blocksDone / Math.max(1, S.blocks.length);
+  const tradesPct = Math.min(1, VEC.tradeCount / 20);
+  const usersPct = S.blockIdx > 0 ? Math.min(1, S.totalUsers / S.blockIdx) : 0;
+
+  S.arg    = clamp01(blockPct * 0.4 + blocksPct * 0.3 + tradesPct * 0.3 + (Math.random()-0.5)*0.05);
+  S.xarg   = clamp01(usersPct * 0.4 + tradesPct * 0.3 + blocksPct * 0.3 + (Math.random()-0.5)*0.05);
+  S.tmparg = clamp01(blockPct * 0.5 + (VEC.control ? 0.3 : 0.1) + (Math.random()-0.5)*0.05);
+
+  const sum = S.arg + S.xarg + S.tmparg || 1;
+  S.arg/=sum; S.xarg/=sum; S.tmparg/=sum;
+  S.syncCount++;
+
+  // RAW-Werte dynamisch
+  ROMS.forEach(k => {
+    if (S.rawVals[k] === undefined) S.rawVals[k] = Math.floor(Math.random() * 200);
+    else S.rawVals[k] = (S.rawVals[k] + Math.floor(Math.random() * 20) - 5 + 256) % 256;
+  });
+
+  renderSyncRows();
+  renderRawGrid();
+  updateHeader();
+
+  // Nach oben senden
+  if (window.parent && window.parent !== window) {
+    try {
+      window.parent.postMessage({
+        type: 'arg.sync',
+        from: 'markt',
+        payload: {
+          arg: S.arg, xarg: S.xarg, tmparg: S.tmparg,
+          trades: VEC.tradeCount, users: S.totalUsers,
+          block: S.blockIdx,
+        },
+      }, '*');
+    } catch(_){}
+  }
+  sendBC('arg.sync', { arg: S.arg, xarg: S.xarg, tmparg: S.tmparg });
+}
+
+function renderSyncRows() {
+  const el = document.getElementById('syncRows');
+  const rows = [
+    { k:'arg',    v:S.arg,    cls:'arg' },
+    { k:'xarg',   v:S.xarg,   cls:'xarg' },
+    { k:'tmparg', v:S.tmparg, cls:'tmparg' },
+  ];
+  el.innerHTML = rows.map(r => `
+    <div class="sync-row">
+      <span class="lbl">${r.k}</span>
+      <div class="bar"><div class="f ${r.cls}" style="width:${(r.v*100).toFixed(1)}%"></div></div>
+      <span class="val ${r.cls}">${(r.v*100).toFixed(1)}%</span>
+    </div>
+  `).join('');
+
+  document.getElementById('syncBadge').textContent =
+    S.arg > 0.4 ? 'synced' : S.arg > 0.2 ? 'partial' : 'idle';
+  document.getElementById('syncBadge').className =
+    'badge ' + (S.arg > 0.4 ? 'ok' : S.arg > 0.2 ? 'warn' : 'err');
+}
+
+function renderRawGrid() {
+  const el = document.getElementById('rawGrid');
+  el.innerHTML = ROMS.map(k => `
+    <div class="raw-row">
+      <span class="k">${k}.hdf</span>
+      <span class="v">${S.rawVals[k] || 0}</span>
+    </div>
+  `).join('');
+}
+
+function updateHeader() {
+  document.getElementById('hRoot').textContent = Math.round(S.arg * 100);
+  document.getElementById('hSys').textContent = Math.round(S.xarg * 100);
+}
+
+// ═════════════════════════════════════════════════════════════
+// CANVAS · VEC RING
+// ═════════════════════════════════════════════════════════════
+const canvas = document.getElementById('vecCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, CX, CY, R;
+
+function resizeCanvas() {
+  const wrap = document.getElementById('vecWrap');
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  W = rect.width; H = rect.height;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  CX = W / 2; CY = H / 2;
+  R = Math.min(W, H) * 0.36;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function drawVec() {
+  ctx.clearRect(0, 0, W, H);
+
+  // BG
+  const grad = ctx.createRadialGradient(CX, CY, 10, CX, CY, W*0.6);
+  grad.addColorStop(0, '#0a0a1a');
+  grad.addColorStop(1, '#02040a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  S.canvasT += 0.008;
+
+  // Ring
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,217,61,0.1)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 8]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Inner ring
+  ctx.beginPath();
+  ctx.arc(CX, CY, R * 0.6, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(108,204,255,0.06)';
+  ctx.stroke();
+
+  // 6 Nodes (DOOR · DOO · VEC · GENIE · API · TRADE)
+  const nodes = [
+    { id:'DOOR',  sym:'🚪', color:'#ff6b6b', val:VEC.doorCount  },
+    { id:'DOO/IT',sym:'🔑', color:'#ff44ff', val:VEC.dooCount   },
+    { id:'VECTOR',sym:'◈',  color:'#6b6bff', val:VEC.vecCount   },
+    { id:'GENIE', sym:'🧞', color:'#ffd93d', val:VEC.genieCount },
+    { id:'API',   sym:'🔌', color:'#6cf',    val:VEC.apiCount   },
+    { id:'TRADE', sym:'📊', color:'#4f4',    val:VEC.tradeCount },
+  ];
+
+  nodes.forEach((n, i) => {
+    const angle = (i / 6) * Math.PI * 2 - Math.PI/2 + S.canvasT * 0.05;
+    const x = CX + Math.cos(angle) * R * 0.85;
+    const y = CY + Math.sin(angle) * R * 0.85;
+    const active = n.val > 0;
+    const rad = active ? 10 : 6;
+
+    // Glow
+    const g = ctx.createRadialGradient(x, y, 0, x, y, rad*3);
+    g.addColorStop(0, n.color + (active ? '80' : '30'));
+    g.addColorStop(1, n.color + '00');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, rad*3, 0, Math.PI*2); ctx.fill();
+
+    // Node
+    ctx.beginPath();
+    ctx.arc(x, y, rad, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(4,10,20,0.85)';
+    ctx.fill();
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = n.color;
+    ctx.font = 'bold 9px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.sym, x, y + 0.5);
+
+    ctx.fillStyle = active ? n.color : '#3a4a5a';
+    ctx.font = '7px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText(n.id, x, y + rad + 3);
+
+    // Value below
+    if (n.val > 0) {
+      ctx.fillStyle = n.color + 'aa';
+      ctx.font = 'bold 8px Consolas';
+      ctx.fillText(n.val, x, y + rad + 13);
+    }
+  });
+
+  // Center state
+  const stateColor = VEC.state === 'control-ready' ? '#ff44ff' :
+                     VEC.state === 'stable-transition' ? '#4f4' :
+                     VEC.state === 'tmp-transition' ? '#ffd93d' :
+                     VEC.state === 'api-connected' ? '#6cf' : '#5a7288';
+  const pulse = 1 + 0.1 * Math.sin(S.canvasT * 4);
+  const cr = R * 0.13 * pulse;
+
+  const cg = ctx.createRadialGradient(CX, CY, 0, CX, CY, cr*3);
+  cg.addColorStop(0, stateColor + 'cc');
+  cg.addColorStop(0.5, stateColor + '33');
+  cg.addColorStop(1, stateColor + '00');
+  ctx.fillStyle = cg;
+  ctx.beginPath(); ctx.arc(CX, CY, cr*3, 0, Math.PI*2); ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(CX, CY, cr, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(4,10,20,0.9)';
+  ctx.fill();
+  ctx.strokeStyle = stateColor;
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+
+  ctx.fillStyle = stateColor;
+  ctx.font = 'bold 14px Consolas';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('◈', CX, CY - 2);
+
+  ctx.fillStyle = stateColor;
+  ctx.font = '7px Consolas';
+  ctx.textBaseline = 'top';
+  ctx.fillText(VEC.state, CX, CY + cr + 4);
+
+  // Passage-Status oben
+  ctx.fillStyle = VEC.passage ? '#4f4' : '#ff6b6b';
+  ctx.font = '8px Consolas';
+  ctx.textBaseline = 'bottom';
+  ctx.textAlign = 'center';
+  ctx.fillText(VEC.passage ? '🚪 PASSAGE · OFFEN' : '🚫 PASSAGE · BLOCKIERT', CX, CY - cr - 8);
+
+  requestAnimationFrame(drawVec);
+}
+requestAnimationFrame(drawVec);
+
+// ═════════════════════════════════════════════════════════════
+// BROADCAST CHANNEL
+// ═════════════════════════════════════════════════════════════
+let bc = null;
+try {
+  bc = new BroadcastChannel('iki1uc-market');
+  bc.onmessage = (ev) => {
+    const d = ev.data;
+    if (!d || !d.type) return;
+    S.bcConnected = true;
+    document.getElementById('cBC').textContent = 'verbunden';
+    document.getElementById('cBC').className = 'state on';
+  };
+} catch(_){}
+
+function sendBC(type, payload) {
+  if (bc) try { bc.postMessage({ type, from: 'markt', payload, ts: Date.now() }); } catch(_){}
+}
+
+// ═════════════════════════════════════════════════════════════
+// AUTO MODE
+// ═════════════════════════════════════════════════════════════
+function startAuto() {
+  if (S.autoTimer) return;
+  S.auto = true;
+  document.getElementById('btnAuto').textContent = '⏸ STOP';
+  S.autoTimer = setInterval(tick, S.speed);
+  log('♾ AUTO · Markt läuft', 'ok');
+}
+function stopAuto() {
+  S.auto = false;
+  if (S.autoTimer) { clearInterval(S.autoTimer); S.autoTimer = null; }
+  document.getElementById('btnAuto').textContent = '♾ AUTO';
+  log('⏸ AUTO gestoppt', 'warn');
+}
+
+// ═════════════════════════════════════════════════════════════
+// FL76
+// ═════════════════════════════════════════════════════════════
+function tickFl(now) {
+  if (S.lastFrameT > 0) {
+    S.flRaw = now - S.lastFrameT;
+    S.flSmooth = S.flSmooth * 0.88 + S.flRaw * 0.12;
+  }
+  S.lastFrameT = now;
+  const fl = Math.round(S.flSmooth);
+  document.getElementById('fl76num').textContent = fl;
+  document.getElementById('hFl').textContent = fl;
+  const mon = document.getElementById('fl76');
+  if (fl >= 60 && fl <= 90) mon.className = '';
+  else if (fl < 40 || fl > 120) mon.className = 'outside';
+  else mon.className = 'edge';
+  requestAnimationFrame(tickFl);
+}
+
+// ═════════════════════════════════════════════════════════════
+// CLOCK
+// ═════════════════════════════════════════════════════════════
+function updateClock() {
+  document.getElementById('hClock').textContent = '⏱️ ' + new Date().toLocaleTimeString('de-DE');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═════════════════════════════════════════════════════════════
+// BUTTONS
+// ═════════════════════════════════════════════════════════════
+function bindButtons() {
+  document.getElementById('btnRun').addEventListener('click', startAuto);
+  document.getElementById('btnStep').addEventListener('click', () => { if (S.auto) stopAuto(); tick(); });
+  document.getElementById('btnAuto').addEventListener('click', () => S.auto ? stopAuto() : startAuto());
+  document.getElementById('btnSkip').addEventListener('click', () => {
+    let safety = 0;
+    while (S.slot !== 0 && safety < 200) { tick(); safety++; }
+    log(`⏩ SKIP · Block ${S.blocks[S.blockIdx]?.base}`, 'info');
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    stopAuto();
+    S.blockIdx = 0; S.slot = 0;
+    S.totalRuns = 0; S.totalUsers = 0; S.blocksDone = 0;
+    S.userLog = []; S.syncCount = 0;
+    VEC.control = false; VEC.passage = false; VEC.state = 'idle';
+    VEC.trades = []; VEC.doorCount = 0; VEC.dooCount = 0;
+    VEC.vecCount = 0; VEC.genieCount = 0; VEC.apiCount = 0; VEC.tradeCount = 0;
+    ROMS.forEach(k => S.rawVals[k] = 0);
+    initBlocks(INIT_BLOCKS);
+    buildGrid(); buildChain(); renderUserTree();
+    argSync(); updateMetrics();
+    log('⟲ RESET · Markt zurück zu 1000', 'warn');
+  });
+
+  // VEC Module
+  document.getElementById('btnDoor').addEventListener('click', door_passage);
+  document.getElementById('btnDoo').addEventListener('click', doo_control);
+  document.getElementById('btnVec').addEventListener('click', () => vector_route(choice(ITEMS)));
+  document.getElementById('btnGenie').addEventListener('click', () => genie_rate(choice(ITEMS)));
+  document.getElementById('btnApi').addEventListener('click', api_connect);
+  document.getElementById('btnTrade').addEventListener('click', () => vec_trade(choice(ITEMS)));
+
+  // arg.sync
+  document.getElementById('btnSync').addEventListener('click', argSync);
+  document.getElementById('btnSyncUp').addEventListener('click', () => {
+    log('⬆ sync → root · sys.html', 'info');
+    argSync();
+  });
+  document.getElementById('btnSyncDown').addEventListener('click', () => {
+    log('⬇ sync ← sys · root', 'info');
+  });
+
+  // Module-Cards
+  document.querySelectorAll('.mod').forEach(el => {
+    el.addEventListener('click', () => {
+      const k = el.dataset.mod;
+      document.querySelectorAll('.mod').forEach(m => m.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('modBadge').textContent = k;
+      if (k === 'DOOR') door_passage();
+      else if (k === 'GENIE') genie_rate(choice(ITEMS));
+      else if (k === 'VEC') { /* nur aktivieren */ }
+    });
+  });
+}
+
+// ═════════════════════════════════════════════════════════════
+// CLI
+// ═════════════════════════════════════════════════════════════
+function handleCmd(cmd) {
+  const c = cmd.trim().toLowerCase();
+  if (!c) return;
+  log(`markt> ${cmd}`, 'info');
+  if (c === 'help') log('help · sync · trade · door · doo · vec · genie · api · reset · status · run · stop', 'ok');
+  else if (c === 'sync') argSync();
+  else if (c === 'trade') vec_trade(choice(ITEMS));
+  else if (c === 'door') door_passage();
+  else if (c === 'doo') doo_control();
+  else if (c === 'vec') vector_route(choice(ITEMS));
+  else if (c === 'genie') genie_rate(choice(ITEMS));
+  else if (c === 'api') api_connect();
+  else if (c === 'run') startAuto();
+  else if (c === 'stop') stopAuto();
+  else if (c === 'status') {
+    log(`status · block=${S.blockIdx} slot=${S.slot} trades=${VEC.tradeCount} users=${S.totalUsers} state=${VEC.state}`, 'ok');
+  } else if (c === 'reset') document.getElementById('btnReset').click();
+  else log(`unbekannt: ${c}`, 'err');
+}
+
+document.getElementById('cmd').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    handleCmd(e.target.value);
+    e.target.value = '';
+  }
+});
+
+// ═════════════════════════════════════════════════════════════
+// MESSAGES (von Root/Sys)
+// ═════════════════════════════════════════════════════════════
+window.addEventListener('message', (ev) => {
+  const d = ev.data;
+  if (!d || !d.type) return;
+  if (d.type === 'arg.sync') {
+    S.parentConnected = true;
+    document.getElementById('cParent').textContent = 'verbunden';
+    document.getElementById('cParent').className = 'state on';
+    log(`⬇ SYNC ← root · ${d.payload ? JSON.stringify(d.payload).slice(0,40) : ''}`, 'info');
+  }
+  if (d.type === 'sys.ready') {
+    S.parentConnected = true;
+    document.getElementById('cParent').textContent = 'bereit';
+    document.getElementById('cParent').className = 'state on';
+    log('⬇ sys.ready · root verbunden', 'ok');
+  }
+  if (d.type === 'reset') {
+    document.getElementById('btnReset').click();
+  }
+  if (d.type === 'natural.load' && d.path) {
+    log(`◈ natural.load → ${d.path}`, 'info');
+  }
+});
+
+// ═════════════════════════════════════════════════════════════
+// KEYBOARD
+// ═════════════════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === ' ') { e.preventDefault(); S.auto ? stopAuto() : startAuto(); }
+  if (e.key === 's' || e.key === 'S') tick();
+  if (e.key === 'r' || e.key === 'R') document.getElementById('btnReset').click();
+  if (e.key === 'y' || e.key === 'Y') argSync();
+  if (e.key === '1') door_passage();
+  if (e.key === '2') doo_control();
+  if (e.key === '3') vector_route(choice(ITEMS));
+  if (e.key === '4') genie_rate(choice(ITEMS));
+  if (e.key === '5') api_connect();
+  if (e.key === '6') vec_trade(choice(ITEMS));
+  if (e.key === 'k' || e.key === 'K') document.getElementById('btnSkip').click();
+});
+
+// ═════════════════════════════════════════════════════════════
+// INIT
+// ═════════════════════════════════════════════════════════════
+function init() {
+  initBlocks(INIT_BLOCKS);
+  ROMS.forEach(k => S.rawVals[k] = Math.floor(Math.random() * 200));
+  buildGrid();
+  buildChain();
+  renderUserTree();
+  renderSyncRows();
+  renderRawGrid();
+  updateMetrics();
+  bindButtons();
+  argSync();
+  updateHeader();
+
+  log('◈ MARKT · VEC · STATION bereit', 'ok');
+  log('→ 100er Blöcke ab 1000 · 1 User / 100 · VEC-Module aktiv', 'info');
+  log('→ Tasten: Space=run · S=step · Y=sync · 1-6=module · K=skip · R=reset', 'warn');
+  log('→ parent: sys.html · bc: iki1uc-market', 'info');
+
+  // Nach oben melden
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'markt.ready', from: 'markt' }, '*');
+    }
+  } catch(_){}
+
+  requestAnimationFrame(tickFl);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+// ═════════════════════════════════════════════════════════════
+// PUBLIC API
+// ═════════════════════════════════════════════════════════════
+window.MARKT = {
+  run:      () => startAuto(),
+  stop:     () => stopAuto(),
+  step:     () => tick(),
+  skip:     () => document.getElementById('btnSkip').click(),
+  reset:    () => document.getElementById('btnReset').click(),
+  sync:     () => argSync(),
+  trade:    (it) => vec_trade(it || choice(ITEMS)),
+  door:     () => door_passage(),
+  doo:      () => doo_control(),
+  vector:   (it) => vector_route(it || choice(ITEMS)),
+  genie:    (it) => genie_rate(it || choice(ITEMS)),
+  api:      () => api_connect(),
+  state:    () => ({
+    tick: S.tick,
+    blockIdx: S.blockIdx,
+    slot: S.slot,
+    base: S.blocks[S.blockIdx]?.base,
+    totalRuns: S.totalRuns,
+    totalUsers: S.totalUsers,
+    blocksDone: S.blocksDone,
+    arg: S.arg, xarg: S.xarg, tmparg: S.tmparg,
+    syncCount: S.syncCount,
+    vec: {
+      state: VEC.state,
+      trades: VEC.tradeCount,
+      users: S.totalUsers,
+      door: VEC.doorCount, doo: VEC.dooCount,
+      vector: VEC.vecCount, genie: VEC.genieCount,
+      api: VEC.apiCount,
+      passage: VEC.passage,
+      control: VEC.control,
+    },
+    raw: { ...S.rawVals },
+    userLog: S.userLog.slice(),
+  }),
+  users:    () => S.userLog.slice(),
+  blocks:   () => S.blocks.map(b => ({
+    idx: b.idx, base: b.base,
+    done: b.doneCount, userSlot: b.userSlot,
+    userFound: b.userFound, userItem: b.userItem,
+  })),
+  items:    () => ITEMS.slice(),
+};
+window.M = window.MARKT;
+
+console.log('%c◈ MARKT · VEC · STATION geladen',
+  'color:#f0d080;font-weight:bold;font-size:14px;');
+console.log('→ window.MARKT.run() · .step() · .trade() · .state()');
+console.log('→ parent: sys.html · bc: iki1uc-market');
+</script>
+</body>
+</html>
